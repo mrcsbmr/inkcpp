@@ -1,0 +1,5 @@
+ERROR: Unknown command '?'. Skipping.
+ERROR: Unknown command '?'. Skipping.Unknown command '?'. Skipping.
+ERROR: Unknown command '?'. Skipping.Unknown command '?'. Skipping.Unknown command '?'. Skipping.
+ERROR: Unknown command '?'. Skipping.Unknown command '?'. Skipping.Unknown command '?'. Skipping.Unknown command '?'. Skipping.
+Cancelling play mode. Errors detected in compilation

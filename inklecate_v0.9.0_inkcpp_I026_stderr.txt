@@ -1,0 +1,6 @@
+ERROR: Unknown command 'FLOOR'. Skipping.
+ERROR: Unknown command 'FLOOR'. Skipping.Unknown command 'CEILING'. Skipping.
+ERROR: Unknown command 'FLOOR'. Skipping.Unknown command 'CEILING'. Skipping.Unknown command 'CEILING'. Skipping.
+ERROR: Unknown command 'FLOOR'. Skipping.Unknown command 'CEILING'. Skipping.Unknown command 'CEILING'. Skipping.Unknown command 'CEILING'. Skipping.
+ERROR: Unknown command 'FLOOR'. Skipping.Unknown command 'CEILING'. Skipping.Unknown command 'CEILING'. Skipping.Unknown command 'CEILING'. Skipping.Unknown command 'FLOOR'. Skipping.
+Cancelling play mode. Errors detected in compilation

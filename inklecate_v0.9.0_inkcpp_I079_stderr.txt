@@ -1,0 +1,1 @@
+Unhandled InkBin compiler exception: No count index available for this container!
