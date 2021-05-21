@@ -6,12 +6,12 @@
 	"Description": "inkcpp integration",
 	"Category": "Narrative",
 	"CreatedBy": "brwarner",
-	"CreatedByURL": "",
-	"DocsURL": "",
+	"CreatedByURL": "https://github.com/brwarner/inkcpp/",
+	"DocsURL": "https://github.com/brwarner/inkcpp",
 	"MarketplaceURL": "",
 	"SupportURL": "",
 	"CanContainContent": false,
-	"IsBetaVersion": false,
+	"IsBetaVersion": true,
 	"Installed": false,
 	"Modules": [
     {
