@@ -78,7 +78,7 @@ namespace ink::runtime::internal
 	{
 	public:
 		restorable(ElementType* buffer, size_t size)
-			: _buffer(buffer), _size(size), _pos(0), _save(~0), _jump(~0)
+			: _buffer(buffer), _size(size), _pos(0), _jump(~0), _save(~0)
 		{ }
 
 		// Checks if we have a save state
@@ -339,7 +339,7 @@ namespace ink::runtime::internal
 	protected:
 		// Called when we run out of space in buffer. 
 		virtual void overflow(ElementType*& buffer, size_t& size) {
-			throw ink_exception("Restorable run out of memory!");
+			inkFail("Restorable run out of memory!");
 		}
 
 	private:

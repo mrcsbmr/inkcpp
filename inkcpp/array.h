@@ -44,7 +44,7 @@ namespace ink::runtime::internal
 			if constexpr (dynamic) {
 				if (_size == _capacity) { extend(); }
 			} else {
-				ink_assert(_size <= _capacity, "Stack Overflow!");
+				inkAssert(_size <= _capacity, "Stack Overflow!");
 			}
 			return data()[_size++];
 		}
@@ -55,7 +55,7 @@ namespace ink::runtime::internal
 					extend(size);
 				}
 			} else {
-				ink_assert(size <= _size, "Only allow to reduce size");
+				inkAssert(size <= _size, "Only allow to reduce size");
 			}
 			_size = size;
 		}

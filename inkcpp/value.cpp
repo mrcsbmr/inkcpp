@@ -70,6 +70,44 @@ namespace ink::runtime::internal
 		os.append(val);
 		return os;
 	}
+	
+	value::value(const ink::runtime::value& val) : value() {
+		using types = ink::runtime::value::Type; 
+		switch (val.type) {
+			case types::Bool:
+				set<value_type::boolean>(val.v_bool);
+				break;
+			case types::Uint32:
+				set<value_type::uint32>(val.v_uint32);
+				break;
+			case types::Int32:
+				set<value_type::int32>(val.v_int32);
+				break;
+			case types::String:
+				set<value_type::string>(val.v_string);
+				break;
+			case types::Float:
+				set<value_type::float32>(val.v_float);
+				break;
+		}
+	}
+	bool value::set( const ink::runtime::value& val ) {
+		auto var = value( val );
+		if ( type() == value_type::none || var.type() == type() ) {
+			*this = var;
+			return true;
+		}
+		return false;
+	}
+	ink::runtime::value value::to_interface_value() const {
+		using val = ink::runtime::value;
+		if(type() == value_type::boolean) { return val(get<value_type::boolean>()); }
+		else if(type() == value_type::uint32) { return val(get<value_type::uint32>()); }
+		else if(type() == value_type::int32) { return val(get<value_type::int32>()); }
+		else if(type() == value_type::string) { return val(get<value_type::string>().str); }
+		else if(type() == value_type::float32) { return val(get<value_type::float32>()); }
+		inkFail("No valid type to convert to interface value!");
+		return val();
 
 	size_t value::snap(unsigned char* data, const snapper& snapper) const
 	{

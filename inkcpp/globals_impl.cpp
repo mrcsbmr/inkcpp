@@ -114,63 +114,33 @@ namespace ink::runtime::internal
 		return _variables.get(name);
 	}
 
-	template<value_type ty, typename T>
-	optional<T> fetch_variable(const value* val) {
-		if (val && val->type() == ty) {
-			return optional<T>(val->get<ty>());
-		}
-		return {nullopt};
+	optional<ink::runtime::value> globals_impl::get_var(hash_t name) const {
+		auto* var = get_variable(name);
+		if (!var) { return nullopt; }
+		return {var->to_interface_value()};
 	}
-
-	template<value_type ty, typename T>
-	bool try_set_value(value* val, T x) {
-		if (val && val->type() == ty) {
-			val->set<ty>(x);
-			return true;
-		}
-		return false;
-	}
-
-	optional<int32_t> globals_impl::get_int(hash_t name) const {
-		return fetch_variable<value_type::int32,int32_t>(get_variable(name));
-	}
-	bool globals_impl::set_int(hash_t name, int32_t i) {
-		return try_set_value<value_type::int32, int32_t>(get_variable(name), i);
-	}
-	optional<uint32_t> globals_impl::get_uint(hash_t name) const {
-		return fetch_variable<value_type::uint32,uint32_t>(get_variable(name));
-	}
-	bool globals_impl::set_uint(hash_t name, uint32_t i) {
-		return try_set_value<value_type::uint32, uint32_t>(get_variable(name), i);
-	}
-	optional<float> globals_impl::get_float(hash_t name) const {
-		return fetch_variable<value_type::float32,float>(get_variable(name));
-	}
-	bool globals_impl::set_float(hash_t name, float i) {
-		return try_set_value<value_type::float32, float>(get_variable(name), i);
-	}
-
-	optional<const char*> globals_impl::get_str(hash_t name) const {
-		return fetch_variable<value_type::string, const char*>(get_variable(name));
-	}
-	bool globals_impl::set_str(hash_t name, const char* val) {
-		value* v = get_variable(name);
-		if (v->type() == value_type::string)
-		{
+	
+	bool globals_impl::set_var(hash_t name, const ink::runtime::value& val) {
+		auto* var = get_variable(name);
+		if (!var) { return false; }
+		if ( val.type == ink::runtime::value::Type::String) {
+			if (!(var->type() == value_type::none || var->type() == value_type::string)) { return false; }
 			size_t size = 0;
 			char* ptr;
-			for(const char*i = val; *i; ++i) { ++size; }
-			char* new_string = strings().create(size + 1);
-			strings().mark_used(new_string);
+			for ( const char* i = val.v_string; *i; ++i ) { ++size; }
+			char* new_string = strings().create( size + 1 );
+			strings().mark_used( new_string );
 			ptr = new_string;
-			for(const char* i = val; *i; ++i) {
+			for ( const char* i = val.v_string; *i; ++i ) {
 				*ptr++ = *i;
 			}
 			*ptr = 0;
-			*v = value{}.set<value_type::string>(static_cast<const char*>(new_string), true);
+			*var = value{}.set<value_type::string>( static_cast<const char*>( new_string ), true );
 			return true;
+		} else {
+			return var->set( val );
 		}
-		return false;
+		inkFail("Unchecked case in set var!");
 	}
 
 	void globals_impl::initialize_globals(runner_impl* run)
@@ -178,7 +148,6 @@ namespace ink::runtime::internal
 		// If no way to move there, then there are no globals.
 		if (!run->move_to(hash_string("global decl")))
 		{
-			_globals_initialized = true;
 			return;
 		}
 

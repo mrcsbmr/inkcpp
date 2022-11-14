@@ -6,10 +6,11 @@
 /// define different value_types, and the mapping between type and data.
 
 #include "system.h"
-#include "../shared/private/command.h"
+#include "command.h"
 #include "list_table.h"
 #include "snapshot_impl.h"
 #include "tuple.hpp"
+#include "types.h"
 
 #ifdef INK_ENABLE_STL
 #include <iosfwd>
@@ -92,8 +93,15 @@ namespace ink::runtime::internal {
 		/// help struct to determine cpp type which represent the value_type
 		template<value_type> struct ret { using type = void; };
 
-		constexpr value() : snapshot_interface(), _type{value_type::none}, bool_value{0}{}
-		constexpr explicit value( value_type type ) : _type{ type }, bool_value{0} {}
+		constexpr value() : uint32_value{0}, _type{value_type::none}{}
+		
+		explicit value(const ink::runtime::value& val);
+		bool set( const ink::runtime::value& val );
+		ink::runtime::value to_interface_value() const;
+		
+		// TODO MERGE CONFLICT:
+		//constexpr value() : snapshot_interface(), _type{value_type::none}, bool_value{0}{}
+		//constexpr explicit value( value_type type ) : _type{ type }, bool_value{0} {}
 
 		/// get value of the type (if possible)
 		template<value_type ty>
@@ -128,7 +136,7 @@ namespace ink::runtime::internal {
 		/// this new type
 		template<typename ... T>
 		value redefine(const value& oth, T& ... env) const {
-			inkAssert(type() == oth.type());
+			inkAssert(type() == oth.type(), "try to redefine value of other type");
 			return redefine<value_type::OP_BEGIN, T...>(oth, {&env...});
 		}
 
@@ -136,7 +144,8 @@ namespace ink::runtime::internal {
 		template<value_type ty, typename ... T>
 		value redefine(const value& oth, const tuple<T*...>& env) const {
 			if constexpr ( ty == value_type::OP_END) {
-				throw ink_exception("Can't redefine value with this type! (It is not an variable type!)");
+				inkFail("Can't redefine value with this type! (It is not an variable type!)");
+				return value{};
 			} else if (ty != type()) {
 				return redefine<ty + 1>(oth, env);
 			} else {

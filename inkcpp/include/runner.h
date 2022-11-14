@@ -57,6 +57,7 @@ namespace ink::runtime
 		*/
 		virtual bool can_continue() const = 0;
 
+#ifdef INK_ENABLE_CSTD
 		/**
 		 * Continue execution until the next newline, then allocate a c-style
 		 * string with the output. This allocated string is now the callers 
@@ -65,6 +66,7 @@ namespace ink::runtime
 		 * @return allocated c-style string with the output of a single line of execution
 		*/
 		virtual char* getline_alloc() = 0;
+#endif
 
 		/**
 		 * @brief creates a snapshot containing the runner, globals and all other runners connected to the globals.

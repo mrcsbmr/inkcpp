@@ -12,6 +12,8 @@ namespace ink::runtime::internal
 	public:
 		simple_restorable_stack(T* buffer, size_t size, const T& null)
 			: _buffer(buffer), _size(size), _null(null) { }
+		virtual ~simple_restorable_stack() = default;
+			
 
 		void push(const T& value);
 		T pop();
@@ -33,7 +35,7 @@ namespace ink::runtime::internal
 
 	protected:
 		virtual void overflow(T*& buffer, size_t& size) {
-			throw ink_exception("Stack overflow!");
+			inkFail("Stack overflow!");
 		}
 
 		void initialize_data(T* buffer, size_t size) {
@@ -64,7 +66,7 @@ namespace ink::runtime::internal
 		managed_restorable_stack(const T& null) :
 			simple_restorable_stack<T>(nullptr, 0, null), _stack{}
 		{ base::initialize_data(_stack.data(), N); }
-		virtual void overflow(T*& buffer, size_t& size) override final {
+		virtual void overflow(T*& buffer, size_t& size) override {
 			if constexpr (dynamic) {
 				if (buffer) {
 					_stack.extend();
@@ -148,7 +150,6 @@ namespace ink::runtime::internal
 	inline void simple_restorable_stack<T>::clear()
 	{
 		// Reset to start
-		// TODO: Support save!
 		_save = _jump = InvalidIndex;
 		_pos = 0;
 	}
@@ -212,19 +213,19 @@ namespace ink::runtime::internal
 	{
 		inkAssert(_save != InvalidIndex, "Can not forget when the stack has never been saved!");
 
-		/*// If we have moven to a point earlier than the save point but we have a jump point
-		if (_pos < _save && _pos > _jump)
-		{*/
-			// If we're at the save point, move us instead
-			if (_pos == _save)
-				_pos = _jump;
-			// Everything between the jump point and the save point needs to be nullified
-			else for (size_t i = _jump; i < _save; i++)
-				_buffer[i] = _null;
-		/*}*/
+		inkAssert(_pos >= _save || _pos < _jump, "Pos is in backup areal! (should be impossible)");
+		// if we are below the backup areal, no changes are needed
+		// if we above the backup areal, we need to collpse it
+		if (_pos >= _save) {
+			size_t delta = _save - _jump;
+			for(size_t i = _save; i < _pos; ++i) {
+				_buffer[i - delta] = _buffer[i];
+			}
+			_pos -= delta;
+		}
 
 		// Just reset save position
-		_save = InvalidIndex;
+		_save = _jump = InvalidIndex;
 	}
 	template<typename T>
 	size_t simple_restorable_stack<T>::snap(unsigned char* data, const snapper&) const

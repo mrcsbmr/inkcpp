@@ -14,6 +14,11 @@ namespace ink::runtime::internal {
 		|| ty == value_type::int32
 		|| ty == value_type::uint32
 		|| ty == value_type::float32, void>::type;
+	
+	template<value_type ty>
+	using is_signed_numeric_t = typename enable_if<
+		ty == value_type::int32
+		|| ty == value_type::float32, void>::type;
 
 	/// list of internal value types
 	/// produces a SFINAE error if type is not part of list
@@ -47,7 +52,8 @@ namespace ink::runtime::internal {
 		inline typename value::ret<to>::type numeric_cast(const value& v) {
 			if (to == v.type()) { return v.get<to>(); }
 			else {
-				throw ink_exception("invalid numeric_cast!");
+				inkFail("invalid numeric_cast!");
+				return 0;
 			}
 		}
 
@@ -61,7 +67,8 @@ namespace ink::runtime::internal {
 				case value_type::boolean:
 					return static_cast<uint32_t>(v.get<value_type::boolean>());
 				default:
-					throw ink_exception("invalid cast to uint!");
+					inkFail("invalid cast to uint!");
+					return 0;
 			}
 		}
 
@@ -73,7 +80,8 @@ namespace ink::runtime::internal {
 				case value_type::boolean:
 					return static_cast<int32_t>(v.get<value_type::boolean>());
 				default:
-					throw ink_exception("invalid cast to int!");
+					inkFail("invalid cast to int!");
+					return 0;
 			}
 		}
 
@@ -87,7 +95,8 @@ namespace ink::runtime::internal {
 				case value_type::int32:
 					return static_cast<float>(v.get<value_type::int32>());
 				default:
-					throw ink_exception("invalid numeric_cast!");
+					inkFail("invalid numeric_cast!");
+					return 0;
 			}
 		}
 	}
@@ -369,7 +378,7 @@ namespace ink::runtime::internal {
 	};
 
 	template<value_type ty>
-	class operation<Command::NEGATE, ty,  is_numeric_t<ty>> : public operation_base<void> {
+	class operation<Command::NEGATE, ty,  is_signed_numeric_t<ty>> : public operation_base<void> {
 	public:
 		using operation_base::operation_base;
 		void operator()(basic_eval_stack& stack, value* vals) {

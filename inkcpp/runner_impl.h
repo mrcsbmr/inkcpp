@@ -154,6 +154,34 @@ namespace ink::runtime::internal
 
 		inline thread_t current_thread() const { return _threads.empty() ? ~0 : _threads.top(); }
 
+	private:
+		const story_impl* const _story;
+		story_ptr<globals_impl> _globals;
+		executer _operations;
+
+		// == State ==
+
+		// Instruction pointer
+		ip_t _ptr;
+		ip_t _backup; // backup pointer
+		ip_t _done; // when we last hit a done
+
+		// Output stream
+		internal::stream<config::limitOutputSize> _output;
+
+		// Runtime stack. Used to store temporary variables and callstack
+		internal::stack<abs(config::limitRuntimeStack), config::limitRuntimeStack < 0> _stack;
+		internal::stack<abs(config::limitReferenceStack), config::limitReferenceStack < 0> _ref_stack;
+
+		// Evaluation stack
+		bool bEvaluationMode = false;
+		internal::eval_stack<abs(config::limitEvalStackDepth), config::limitEvalStackDepth < 0> _eval;
+		bool bSavedEvaluationMode = false;
+
+		// Keeps track of what threads we're inside
+		template<bool dynamic, size_t N>
+		class threads : public internal::managed_restorable_stack<thread_t,  dynamic,  N> {
+			using base = internal::managed_restorable_stack<thread_t, dynamic, N>;
 	public:
 		class threads : public internal::simple_restorable_stack<thread_t> {
 			using base = internal::simple_restorable_stack<thread_t>;
@@ -162,19 +190,17 @@ namespace ink::runtime::internal
 		public:
 			template<bool ... D, bool con = dynamic,  enable_if_t<con, bool> = true >
 			threads()
-				: base(nullptr, 0, ~0),
+				: base(~0),
 				_threadDone(nullptr, reinterpret_cast<ip_t>(~0)) {
 					static_assert(sizeof...(D) == 0, "Don't use explicit template arguments!");
 			}
 			template<bool ... D, bool con = dynamic, enable_if_t<!con, bool> = true >
 			threads()
-				: _stack{},
-				base(_stack.data(), N, ~0),
+				: base(~0),
 				_threadDone(nullptr, reinterpret_cast<ip_t>(~0)) {
 					static_assert(sizeof...(D) == 0, "Don't use explicit template arguments");
 					_threadDone.clear(nullptr);
 				}
-
 			void clear() {
 				base::clear();
 				_threadDone.clear(nullptr);
@@ -214,41 +240,14 @@ namespace ink::runtime::internal
 			void resize(size_t size, int) { _threadDone.resize(size); }
 
 
-			managed_array<thread_t, dynamic, N> _stack;
 			array_type _threadDone;
 		};
-
-	private:
-		const story_impl* const _story;
-		story_ptr<globals_impl> _globals;
-		executer _operations;
-
-		// == State ==
-
-		// Instruction pointer
-		ip_t _ptr;
-		ip_t _backup; // backup pointer
-		ip_t _done; // when we last hit a done
-
-		// Output stream
-		internal::stream<config::limitOutputSize> _output;
-
-		// Runtime stack. Used to store temporary variables and callstack
-		internal::stack<abs(config::limitRuntimeStack), config::limitRuntimeStack < 0> _stack;
-		internal::stack<abs(config::limitReferenceStack), config::limitReferenceStack < 0> _ref_stack;
-
-		// Evaluation stack
-		bool _evaluation_mode = false;
-		internal::eval_stack<abs(config::limitEvalStackDepth), config::limitEvalStackDepth < 0> _eval;
-		bool _saved_evaluation_mode = false;
-
-		// Keeps track of what threads we're inside
-		threads _threads;
+		threads<config::limitContainerDepth < 0, abs(config::limitThreadDepth)> _threads;
 
 		// Choice list
 		managed_array<choice, config::maxChoices < 0, abs(config::maxChoices)> _choices;
 		optional<choice> _fallback_choice;
-		size_t _backup_choice_len;
+		size_t _backup_choice_len = 0;
 
 		// Tag list
 		managed_array<const char*, config::limitActiveTags < 0, abs(config::limitActiveTags)> _tags;
@@ -265,16 +264,11 @@ namespace ink::runtime::internal
 		prng _rng{};
 	};
 
-	inline void runner_impl::threads::overflow(thread_t*& buffer, size_t& size) {
+	template<bool dynamic, size_t N>
+	void runner_impl::threads<dynamic, N>::overflow(thread_t*& buffer, size_t& size) {
+		base::overflow(buffer, size);
 		if constexpr (dynamic) {
-			if(buffer) {
-				_stack.extend();
-			}
-			buffer = _stack.data();
-			size = _stack.capacity();
 			resize(size, 0);
-		} else {
-			base::overflow(buffer, size);
 		}
 	}
 

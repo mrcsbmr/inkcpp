@@ -76,7 +76,7 @@ namespace ink::runtime::internal
 	};
 	class reverse_find_from_frame_predicat_operator {
 	public:
-		reverse_find_from_frame_predicat_operator(int ci, hash_t name) : _name{name}, _ci{ci} {
+		reverse_find_from_frame_predicat_operator(int ci, hash_t name) : _ci{ci}, _name{name} {
 			inkAssert(ci == -1 || ci == 0, "only support ci == -1, for now!");
 		}
 		bool operator()(entry& e) {
@@ -208,7 +208,7 @@ namespace ink::runtime::internal
 		} else if (vt == value_type::thread_start) {
 			start.set<value_type::thread_start>(jump);
 		} else {
-			throw ink_exception("unknown jump type");
+			inkFail("unknown jump type");
 		}
 		return threadIter.get();
 	}
